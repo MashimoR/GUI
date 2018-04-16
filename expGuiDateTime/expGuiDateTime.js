@@ -15,7 +15,8 @@ var expGuiDateTime = function (pObject, config) {
     var baseId = pObject.id;
 
     // Webサービスの設定
-    var apiURL = "http://api.ekispert.jp/";
+    // var apiURL = "http://api.ekispert.jp/";
+    var apiURL = "http://13.115.118.154/";
 
     // GETパラメータからキーの設定
     var key;

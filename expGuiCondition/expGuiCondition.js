@@ -15,7 +15,7 @@ var expGuiCondition = function (pObject, config) {
     var baseId = pObject.id;
 
     // Webサービスの設定
-    var apiURL = "http://api.ekispert.jp/";
+    var apiURL = "http://13.115.118.154/";
 
     // GETパラメータからキーの設定
     var key;
@@ -64,7 +64,7 @@ var expGuiCondition = function (pObject, config) {
     // 変数郡
     // デフォルト探索条件
     var def_condition_t = "T3221233232319";
-    var def_condition_f = "F3321122120";
+    var def_condition_f = "F332112212000";
     var def_condition_a = "A23121141";
     var def_sortType = "ekispert"; // デフォルトソート
     var def_priceType = "oneway"; // 片道運賃がデフォルト
@@ -195,6 +195,12 @@ var expGuiCondition = function (pObject, config) {
         var conditionLabel = "学割乗車券";
         var tmpOption = new Array("計算する", "計算しない");
         var tmpValue = new Array("true", "false");
+        tmp_conditionObject[conditionId.toLowerCase()] = addCondition(conditionLabel, tmpOption, tmpValue);
+        // JR予約サービス
+        var conditionId = "JRReservation";
+        var conditionLabel = "JR予約サービス";
+        var tmpOption = new Array("適用しない","ＥＸ予約", "ＥＸ予約(ｅ特急券)", "ＥＸ予約(ＥＸ早特)", "ＥＸ予約(ＥＸ早特２１)", "ＥＸ予約(ＥＸグリーン早特)", "スマートＥＸ", "スマートＥＸ(ＥＸ早特)", "スマートＥＸ(ＥＸ早特２１)", "スマートＥＸ(ＥＸグリーン早特)");
+        var tmpValue = new Array("none", "exYoyaku", "exETokkyu", "exHayatoku", "exHayatoku21", "exGreenHayatoku", "smartEx", "smartExHayatoku", "smartExHayatoku21", "smartExGreenHayatoku");
         tmp_conditionObject[conditionId.toLowerCase()] = addCondition(conditionLabel, tmpOption, tmpValue);
         // 航空運賃の指定
         //var conditionId = "airFare";
@@ -472,6 +478,13 @@ var expGuiCondition = function (pObject, config) {
         }
         return buffer;
     }
+    
+    function check() {
+        // ＪＲ予約サービスと学割乗車券が同時指定されている場合
+        if (getValue("JRReservation") != "none" && getValue("studentDiscount") != false) {
+            alert("エクスプレス予約と学割");
+        }
+    }
 
     /**
     * 探索条件詳細
@@ -542,6 +555,9 @@ var expGuiCondition = function (pObject, config) {
         // 定期種別初期値
         buffer += outConditionRadio("teikiKind", "greenSelect");
         buffer += outSeparator("teikiKind");
+        // JR予約サービス
+        buffer += outConditionSelect("JRReservation");
+        buffer += outSeparator("JRReservation");
         // JR季節料金
         buffer += outConditionRadio("JRSeasonalRate", "whiteSelect");
         buffer += outSeparator("JRSeasonalRate");
@@ -635,7 +651,8 @@ var expGuiCondition = function (pObject, config) {
             // PC用閉じるボタン
             buffer += '<div class="exp_conditionFooter">';
             buffer += '<div class="exp_conditionClose">';
-            buffer += '<a class="exp_conditionCloseButton" id="' + baseId + ':conditionClose" href="Javascript:void(0);"><span class="exp_text" id="' + baseId + ':conditionClose:text">閉じる</span></a>';
+            // buffer += '<a class="exp_conditionCloseButton" id="' + baseId + ':conditionClose" href="Javascript:void(0);"><span class="exp_text" id="' + baseId + ':conditionClose:text">閉じる</span></a>';
+            buffer += '<a class="exp_conditionCloseButton" id="' + baseId + ':conditionClose" href="Javascript:check();"><span class="exp_text" id="' + baseId + ':conditionClose:text">閉じる</span></a>';
             buffer += '</div>';
             buffer += '</div>';
         }
@@ -712,10 +729,11 @@ var expGuiCondition = function (pObject, config) {
         buffer += outConditionSelect("studentDiscount", "whiteSelect"); // 学割乗車券
         buffer += outConditionSelect("teikiKind", "greenSelect"); // 定期種別初期値
         buffer += outConditionSelect("JRSeasonalRate", "whiteSelect"); // JR季節料金
-        buffer += outConditionSelect("ticketSystemType", "greenSelect"); // 乗車券計算のシステム
-        buffer += outConditionSelect("preferredTicketOrder", "whiteSelect"); // 優先する乗車券の順序
-        buffer += outConditionSelect("nikukanteiki", "greenSelect"); // ２区間定期の利用
-        buffer += outConditionSelect("includeInsurance", "whiteSelect"); // 航空保険特別料金
+        buffer += outConditionSelect("JRReservation", "greenSelect"); // JR予約サービス
+        buffer += outConditionSelect("ticketSystemType", "whiteSelect"); // 乗車券計算のシステム
+        buffer += outConditionSelect("preferredTicketOrder", "greenSelect"); // 優先する乗車券の順序
+        buffer += outConditionSelect("nikukanteiki", "whiteSelect"); // ２区間定期の利用
+        buffer += outConditionSelect("includeInsurance", "greenSelect"); // 航空保険特別料金
         //  buffer += outConditionSelect("airFare");// 航空運賃の指定
         buffer += '</div>';
         buffer += '</div>';
@@ -1034,6 +1052,37 @@ var expGuiCondition = function (pObject, config) {
     }
 
     /**
+    * JR予約サービスのインデックスの桁数変換
+    */
+    function getJRReservation() {      
+        var selectedName = getValue("JRReservation");
+        switch(selectedName) {
+            case 'none':
+              return [0, 0];
+            case 'exYoyaku':
+              return [1, 0];
+            case 'exETokkyu':
+              return [2, 0];
+            case 'exHayatoku':
+              return [3, 0];
+            case 'exHayatoku21':
+              return [4, 0];
+            case 'exGreenHayatoku':
+              return [5, 0];
+            case 'smartEx':
+              return [0, 1];
+            case 'smartExHayatoku':
+              return [0, 2];
+            case 'smartExHayatoku21':
+              return [0, 3];
+            case 'smartExGreenHayatoku':
+              return [0, 4];
+            default:
+              return [0, 0];
+        }
+    }
+
+    /**
     * 探索条件をフォームにセットする
     */
     function setCondition(param1, param2, priceType, condition) {
@@ -1191,6 +1240,8 @@ var expGuiCondition = function (pObject, config) {
         conditionList_f[8] = getValueIndex("nikukanteiki", parseInt(conditionList_f[8]));
         // 9:固定
         conditionList_f[10] = getValueIndex("preferredTicketOrder", parseInt(conditionList_f[10]));
+        conditionList_f[11] = getJRReservation()[0];//getValueIndex("JRReservation"/*, parseInt(conditionList_f[11])*/);
+        conditionList_f[12] = getJRReservation()[1];
         // 探索条件(A)
         var conditionList_a = def_condition_a.split('');
         conditionList_a[1] = getValueIndex("useJR", parseInt(conditionList_a[1]));
@@ -1413,6 +1464,7 @@ var expGuiCondition = function (pObject, config) {
     this.CONDITON_SURCHARGEKIND = "surchargeKind";
     this.CONDITON_TEIKIKIND = "teikiKind";
     this.CONDITON_JRSEASONALRATE = "JRSeasonalRate";
+    this.CONDITON_JRRESERVATION = "JRReservation";
     this.CONDITON_STUDENTDISCOUNT = "studentDiscount";
     //this.CONDITON_AIRFARE = "airFare";
     this.CONDITON_INCLUDEINSURANCE = "includeInsurance";

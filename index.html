@@ -1,0 +1,170 @@
+<html>
+ <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <title>
+   EX予約作成体験
+   </title>
+   <!-- ヘッダ部分 -->
+   <link class="css" rel="stylesheet" type="text/css" href="./expGuiDateTime/expCss/expGuiDateTime.css">
+   <link class="css" rel="stylesheet" type="text/css" href="./expGuiStation/expCss/expGuiStation.css">
+   <link class="css" rel="stylesheet" type="text/css" href="./expGuiCondition/expCss/expGuiCondition.css">
+   <link class="css" rel="stylesheet" type="text/css" href="./expGuiCourse/expCss/expGuiCourse.css">
+   <script type="text/javascript" src="./expGuiDateTime/expGuiDateTime.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script>
+   <script type="text/javascript" src="./expGuiStation/expGuiStation.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script>
+   <script type="text/javascript" src="./expGuiCondition/expGuiCondition.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script>
+   <script type="text/javascript" src="./expGuiCourse/expGuiCourse.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script>
+   <!-- <script type="text/javascript" src="./expGuiStationInfo/expGuiStationInfo.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script> -->
+   <!-- <script type="text/javascript" src="./expGuiRail/expGuiRail.js?key=wC4SR9ETBhBcJ3Bv" charset="UTF-8"></script> -->
+   
+   <script type="text/javascript">
+     var dateTimeApp;// 日付入力パーツ
+     var stationApp1;// 駅名入力パーツ#1
+     var stationApp2;// 駅名入力パーツ#2
+     var conditonApp;// 探索条件パーツ
+     var resultApp;// 経路表示パーツ
+     var station;
+     var rail;
+     /*
+     * パーツを初期化
+     */
+     function init(){
+       // 日付入力パーツ初期化
+       dateTimeApp = new expGuiDateTime(document.getElementById("dateTime"));
+       dateTimeApp.dispDateTime();
+       // 駅名入力パーツ#1初期化
+       stationApp1 = new expGuiStation(document.getElementById("station1"));
+       stationApp1.dispStation();
+       // 駅名入力パーツ#2初期化
+       stationApp2 = new expGuiStation(document.getElementById("station2"));
+       stationApp2.dispStation();
+       // 探索条件パーツ初期化
+       conditonApp = new expGuiCondition(document.getElementById("condition"));
+       conditonApp.dispCondition();
+       // 経路表示パーツ初期化
+       resultApp = new expGuiCourse(document.getElementById("result"));
+       // 駅情報(一旦コメント)
+       // station = new expGuiStationInfo();
+       // station.setConfigure("type",station.TYPE_TRAIN);
+       // station.setConfigure("corporationBind","ＪＲ");
+       // station.getStation("東京",setStationList);
+       // 路線情報(一旦コメント)
+       // rail = new expGuiRail();
+       // rail.setConfigure("type",rail.TYPE_TRAIN);
+       // rail.searchCorporation(setCorporationList); //会社[0]→路線[0]→駅リストを出してるみたい
+     }
+     function search(){
+       var searchWord = "";
+       // 発着地リストを作成
+       searchWord +="viaList="+ stationApp1.getStation() +":"+ stationApp2.getStation();
+       // 探索種別
+       searchWord += '&searchType='+ dateTimeApp.getSearchType();
+       // 日時設定
+       searchWord += '&date='+ dateTimeApp.getDate();
+       if(dateTimeApp.getSearchType()==dateTimeApp.SEARCHTYPE_DEPARTURE || dateTimeApp.getSearchType()==dateTimeApp.SEARCHTYPE_ARRIVAL){
+         searchWord += '&time='+ dateTimeApp.getTime();
+       }
+       // ソート
+       searchWord += '&sort='+ conditonApp.getSortType();
+       // 探索結果数
+       searchWord += '&answerCount='+ conditonApp.getAnswerCount();
+       // 探索条件
+       searchWord += '&conditionDetail='+ conditonApp.getConditionDetail();
+       // 探索を実行
+       resultApp.search(searchWord,conditonApp.getPriceType());
+     }
+     /*
+     * 駅情報取得コールバック
+     */
+     function setStationList(isSuccess){
+       if(!isSuccess){
+         alert("駅情報が取得出来ませんでした");
+       }else{
+         var tmp_stationList = station.getStationList().split(",");
+         if(tmp_stationList[0] != ""){
+           getStationInfo(station.getPointObject(tmp_stationList[0]).code);
+         }
+       }
+     }
+     /*
+     * 駅付加情報取得
+     */
+     function getStationInfo(code){
+       station.getStationInfo(code,setStationInfo);
+     }
+     /*
+     * 駅付加情報取得コールバック
+     */
+     function setStationInfo(isSuccess){
+       if(!isSuccess){
+         alert("駅付加情報が取得出来ませんでした");
+       }else{
+         var railInfoList = station.getInformationList(station.TYPE_RAIL).split(",");
+         // 乗り入れ路線
+         var buffer = "";
+         buffer += '乗り入れ路線\n';
+         for(var i=0;i<railInfoList.length;i++){
+           buffer += railInfoList[i] +'\n';
+         }
+         alert(buffer);
+       }
+     }
+     /*
+     * 会社一覧取得のコールバック
+     */
+     function setCorporationList(isSuccess){
+       if(!isSuccess){
+         alert("会社一覧が取得できませんでした");
+       }else{
+         //会社一覧
+         var corpList = rail.getCorporationList().split(",");
+         if(corpList[0] != ""){
+           rail.searchRail(corpList[0],setRailList);
+         }
+       }
+     }
+     /*
+     * 路線一覧取得のコールバック
+     */
+     function setRailList(isSuccess){
+       if(!isSuccess){
+         alert("路線一覧が取得できませんでした");
+       }else{
+         //路線一覧
+         var railList = rail.getRailList().split(",");
+         if(railList[0] != ""){
+           rail.searchStation(railList[0],rail.DIRECTION_NONE,setStationList);
+         }
+       }
+     }
+     /*
+     * 停車駅一覧取得のコールバック
+     */
+     function setStationList(isSuccess){
+       if(!isSuccess){
+         alert("駅一覧が取得できませんでした");
+       }else{
+         //駅一覧の出力
+         var buffer = "";
+         var stationList = rail.getStationList().split(",");
+         for(var i=0;i<stationList.length;i++){
+           buffer+=stationList[i]+"\n";
+         }
+         alert(buffer);
+       }
+     }
+     // -->
+   </script>
+   
+ </head>
+ <body onLoad="Javascript:init();">
+   <!-- パーツ表示部分 -->
+   <div id="dateTime"></div>
+   出発地
+   <div id="station1" style="width:100%;"></div>
+   目的地
+   <div id="station2" style="width:100%;"></div>
+   <div id="condition"></div>
+   <a href="Javascript:search();">このリンクをクリックすることで経路が表示されます</a><br>
+   <div id="result"></div>
+ </body>
+</html>

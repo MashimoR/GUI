@@ -15,7 +15,7 @@ var expGuiCourse = function (pObject, config) {
     var baseId = pObject.id;
 
     // Webサービスの設定
-    var apiURL = "http://api.ekispert.jp/";
+    var apiURL = "http://13.115.118.154/";
 
     // GETパラメータからキーの設定
     var key;
@@ -2671,6 +2671,8 @@ var expGuiCourse = function (pObject, config) {
             buffer += '</div>';
             buffer += '</div>';
             buffer += '</div>';
+            buffer += '<div class="exp_footer">exp_footer';
+            buffer += '</div>';
         }
 
         // 路線
@@ -2816,7 +2818,11 @@ var expGuiCourse = function (pObject, config) {
                             buffer += '<a id="' + baseId + ':chargeMenu:' + String(routeNo) + ':' + String(index + 1) + ':open" href="Javascript:void(0);">';
                         }
                         buffer += '<div class="exp_chargeCost" id="' + baseId + ':chargeMenu:' + String(routeNo) + ':' + String(index + 1) + ':open:2">';
-                        buffer += ((typeof chargeList[i].Name != 'undefined') ? chargeList[i].Name : "指定なし") + ":";
+                        var chargeRemark = '';
+                        if (typeof chargeList[i].Oneway.remark != 'undefined') {
+                          chargeRemark = '【' + chargeList[i].Oneway.fullRemark + '】';
+                        }
+                        buffer += ((typeof chargeList[i].Name != 'undefined') ? chargeList[i].Name + chargeRemark : "指定なし") + ": ";
                         // 運賃改定未対応
                         var salesTaxRateIsNotSupported = false;
                         if (typeof chargeList[i].fareRevisionStatus != 'undefined') {
@@ -2851,6 +2857,7 @@ var expGuiCourse = function (pObject, config) {
                     buffer += '</div>';
                     buffer += '<div class="exp_body">';
                     buffer += '<div class="exp_list">';
+                    var expectedRemark;
                     // メニュー
                     for (var k = 0; k < chargeList.length; k++) {
                         // 運賃改定未対応
@@ -2872,20 +2879,46 @@ var expGuiCourse = function (pObject, config) {
                         }
                         buffer += '</span>';
                         buffer += '</span>';
-                        buffer += ((typeof chargeList[k].Name != 'undefined') ? chargeList[k].Name : "指定なし") + '&nbsp;</a></div>';
+                        var chargeRemark = '';
+                        if (typeof chargeList[k].Oneway.remark != 'undefined') {
+                            chargeRemark = '(' + chargeList[k].Oneway.remark + ')';
+                        }
+                        
+                        buffer += ((typeof chargeList[k].Name != 'undefined') ? chargeList[k].Name　+ chargeRemark : "指定なし")
+                        
+                        if (typeof chargeList[k].Oneway.expectedRemark != 'undefined') {
+                            expectedRemark = chargeList[k].Oneway.expectedFullRemark;
+                            buffer += '※';
+                        }
+                        
+                        buffer +=  '&nbsp;</a></div>';
                     }
                     buffer += '</div>';
                     buffer += '</div>';
+                    if (typeof expectedRemark != 'undefined') {
+                        buffer += '<div class="exp_footer"><span class="exp_title">';
+                        buffer += '※探索詳細条件で指定された「' + expectedRemark + '」とは<br>別の割引が適用されています。';
+                        buffer += '</span></div>';
+                    }
                     buffer += '</div>';
                 }
             } else if (agent == 2 || agent == 3) {
                 // 運賃が複数あった場合のフォーム出力
                 buffer += '<div class="exp_chargeSelect">';
+                var expectedRemark;
                 for (var i = 0; i < chargeList.length; i++) {
                     if (chargeList[i].selected == "true") {
                         buffer += '<div class="exp_chargeSelectText">';
                         if (typeof chargeList[i].Name != 'undefined') {
-                            buffer += chargeList[i].Name + ":";
+                            buffer += chargeList[i].Name;
+                            if (typeof chargeList[i].Oneway.fullRemark != 'undefined') {
+                              buffer += '【' + chargeList[i].Oneway.fullRemark + '】';
+                            }
+                            if (typeof chargeList[i].Oneway.expectedRemark != 'undefined') {
+                                buffer += '※';
+                                expectedRemark = chargeList[i].Oneway.expectedFullRemark;
+                            }
+                            buffer += " : ";
                         } else {
                             buffer += "指定なし:";
                         }
@@ -2911,7 +2944,14 @@ var expGuiCourse = function (pObject, config) {
                     for (var i = 0; i < chargeList.length; i++) {
                         buffer += '<option value="' + chargeList[i].index + '"' + ((chargeList[i].selected == "true") ? "selected" : "") + '>';
                         if (typeof chargeList[i].Name != 'undefined') {
-                            buffer += chargeList[i].Name + ":";
+                            buffer += chargeList[i].Name;
+                            if (typeof chargeList[i].Oneway.remark != "undefined") {
+                              buffer += " (" + chargeList[i].Oneway.remark + ")";
+                            }
+                            if (typeof chargeList[i].Oneway.expectedRemark != 'undefined') {
+                                buffer += '※';
+                            }
+                            buffer += " : ";
                         } else {
                             buffer += "指定なし:";
                         }
@@ -2932,7 +2972,13 @@ var expGuiCourse = function (pObject, config) {
                     }
                     buffer += '</select>';
                 }
+                
                 buffer += '</div>';
+                if (typeof expectedRemark != 'undefined') {
+                    buffer += '<span class="exp_detail">';
+                    buffer += '※詳細条件で指定された「' + expectedRemark + '」とは別の割引が適用されています。';
+                    buffer += '</span>';
+                }
             }
         }
 
