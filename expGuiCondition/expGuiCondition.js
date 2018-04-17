@@ -71,6 +71,8 @@ var expGuiCondition = function (pObject, config) {
     var def_answerCount = "5"; // 探索結果数のデフォルト
     var checkBoxItemName = "shinkansen:shinkansenNozomi:limitedExpress:localBus:liner:midnightBus"; //チェックボックスに表示する条件
     var checkboxItem = new Array();
+    // yamaj
+    var selectItem = new Array();
     var conditionObject = initCondition();
 
     /**
@@ -355,11 +357,17 @@ var expGuiCondition = function (pObject, config) {
         for (var i = 0; i < checkboxItem.length; i++) {
             addEvent(document.getElementById(baseId + ':' + checkboxItem[i] + ':checkbox'), "change", onEvent);
         }
+        // yamaj
+        for (var i = 0; i < selectItem.length; i++) {
+            addEvent(document.getElementById(baseId + ':' + selectItem[i]), "change", onEvent);
+        }
         // 連動機能の追加
         setEvent("shinkansen");
         setEvent("shinkansenNozomi");
         setEvent("ticketSystemType");
         setEvent("preferredTicketOrder");
+        // yamaj
+        setEvent("studentDiscount");
         // デフォルト設定
         resetCondition();
         // 簡易設定のデフォルトも設定
@@ -925,6 +933,19 @@ var expGuiCondition = function (pObject, config) {
                     if (getValue("preferredTicketOrder") != "none") {
                         setValue("ticketSystemType", "ic");
                     }
+                // yamaj: イベントの追加
+                } else if (eventIdList[1].toLowerCase() == String("studentDiscount").toLowerCase()) {
+                    // 学割乗車券とＪＲ予約サービスは排他
+                    if (getValue("studentDiscount") == "true" && getValue("JRReservation") != "none") {
+                        setValue("JRReservation", "none");
+                        alert("学割乗車券とＪＲ予約サービスを同時に有効にすることはできません。")
+                    }
+                } else if (eventIdList[1].toLowerCase() == String("JRReservation").toLowerCase()) {
+                    // 学割乗車券とＪＲ予約サービスは排他
+                    if (getValue("JRReservation") != "none" && getValue("studentDiscount") == "true") {
+                        setValue("studentDiscount", "false");
+                        alert("学割乗車券とＪＲ予約サービスを同時に有効にすることはできません。")
+                    }
                 }
             }
         }
@@ -945,6 +966,8 @@ var expGuiCondition = function (pObject, config) {
     */
     function outConditionSelect(id, classType) {
         id = id.toLowerCase();
+        // yamaj
+        selectItem.push(id);
         var buffer = "";
         buffer = '<div id="' + baseId + ':' + id + ':condition" style="display:' + (conditionObject[id].visible ? 'block;' : 'none;') + '">';
         if (typeof classType == 'undefined') {
